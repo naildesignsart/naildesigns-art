@@ -20,11 +20,21 @@
       "**/.*",
       "**/node_modules/**"
     ],
-    "cleanUrls": true,
+    "cleanUrls": false,
     "trailingSlash": false,
     "rewrites": [
-      { "source": "/sitemap.xml", "function": "sitemap" },
-      { "source": "/image-sitemap.xml", "function": "imageSitemap" }
+      {
+        "source": "/sitemap.xml",
+        "function": "sitemap"
+      },
+      {
+        "source": "/image-sitemap.xml",
+        "function": "imageSitemap"
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
     ]
   }
 }
