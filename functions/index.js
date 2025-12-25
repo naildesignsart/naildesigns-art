@@ -1,7 +1,8 @@
-const { setGlobalOptions } = require("firebase-functions");
+const { setGlobalOptions } = require("firebase-functions/v2"); // Note: v2 options ke liye
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 
+// Set max instances to prevent high bills/overload
 setGlobalOptions({ maxInstances: 10 });
 
 admin.initializeApp();
@@ -9,9 +10,9 @@ const db = admin.firestore();
 
 const BASE_URL = "https://naildesigns.art";
 
-// 🔧 अगर Firestore collection नाम अलग हों तो सिर्फ ये 2 बदलना
-const POSTS_COL = "designs";
-const CATS_COL = "categories";
+// 🔧 Agar Firestore collection naam alag hon to sirf ye 2 badalna
+const POSTS_COL = "designs";    // Aapke database mein designs hai
+const CATS_COL = "categories";  // Aapke database mein categories hai
 
 function escXml(str = "") {
   return String(str)
@@ -48,6 +49,7 @@ exports.sitemap = functions.https.onRequest(async (req, res) => {
       const p = doc.data();
       if (p?.status !== "published" || !p?.slug) return;
 
+      // Fix date format if needed
       const lastmodRaw = p.publishedAt || new Date().toISOString();
       const lastmod = String(lastmodRaw).split("T")[0];
 
@@ -57,9 +59,11 @@ exports.sitemap = functions.https.onRequest(async (req, res) => {
     xml += `</urlset>`;
 
     res.set("Content-Type", "application/xml; charset=utf-8");
+    // Cache for 10 mins (600s), Serve stale up to 1 day
     res.set("Cache-Control", "public, max-age=0, s-maxage=600, stale-while-revalidate=86400");
     res.status(200).send(xml);
   } catch (e) {
+    console.error(e);
     res.status(500).send("sitemap error");
   }
 });
@@ -74,6 +78,7 @@ exports.imageSitemap = functions.https.onRequest(async (req, res) => {
 
     postsSnap.forEach((doc) => {
       const p = doc.data();
+      // Ensure post is published, has slug, and has mainImage
       if (p?.status !== "published" || !p?.slug || !p?.mainImage) return;
 
       xml += `  <url>\n`;
@@ -91,6 +96,7 @@ exports.imageSitemap = functions.https.onRequest(async (req, res) => {
     res.set("Cache-Control", "public, max-age=0, s-maxage=600, stale-while-revalidate=86400");
     res.status(200).send(xml);
   } catch (e) {
+    console.error(e);
     res.status(500).send("image sitemap error");
   }
 });

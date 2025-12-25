@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout';
@@ -11,22 +10,43 @@ const Home: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  
+  // ✅ FIX: hasMore ko state mein rakhein, hardcode nahi
+  const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
+      // Agar pehle hi pata hai ki designs khatam hain, toh aur load mat karo
+      if (!hasMore && page > 1) return;
+
       setLoading(true);
-      const data = await getDesigns({}, 20 * page);
-      const cats = await getAllCategories();
+      
+      const limit = 20 * page;
+      const data = await getDesigns({}, limit);
+      
+      // Categories sirf pehli baar load karo
+      if (page === 1) {
+        const cats = await getAllCategories();
+        setCategories(cats);
+      }
+
+      // ✅ FIX: Agar designs limit se kam hain, iska matlab database khatam
+      if (data.length < limit || data.length === designs.length) {
+        setHasMore(false);
+      }
+
       setDesigns(data);
-      setCategories(cats);
       setLoading(false);
     };
+
     fetchData();
     document.title = "Nail Designs Art | The Best Nail Inspiration Gallery";
   }, [page]);
 
-  const loadMore = () => {
-    setPage(prev => prev + 1);
+  const handleLoadMore = () => {
+    if (!loading && hasMore) {
+      setPage(prev => prev + 1);
+    }
   };
 
   return (
@@ -37,9 +57,10 @@ const Home: React.FC = () => {
             Find Your Next <span className="text-pink-500">Manicure</span>
           </h1>
           <p className="text-gray-500 mb-8 max-w-2xl mx-auto">
-            Browse thousands of trending nail designs, from simple office looks to extravagant bridal art.
+            Browse trending nail designs, from simple office looks to extravagant bridal art.
           </p>
           
+          {/* Categories */}
           <div className="flex flex-wrap justify-center gap-2 md:gap-3">
             {categories.slice(0, 10).map(cat => (
               <Link 
@@ -55,14 +76,40 @@ const Home: React.FC = () => {
       </section>
 
       <section className="max-w-7xl mx-auto px-4 py-8">
-        {loading && designs.length === 0 ? (
-            <div className="text-center py-20 text-gray-400">Loading Designs...</div>
+        
+        {/* ✅ EMPTY STATE: Agar designs nahi hain toh message dikhao (Loading nahi) */}
+        {!loading && designs.length === 0 ? (
+            <div className="text-center py-20 bg-gray-50 rounded-xl">
+              <h2 className="text-xl text-gray-900 font-bold mb-2">No designs found yet.</h2>
+              <p className="text-gray-500 mb-6">Database is empty. Please upload designs from Admin panel.</p>
+              
+              <Link to="/admin" className="inline-block px-6 py-3 bg-black text-white rounded-full text-sm font-bold hover:bg-gray-800 transition-colors">
+                 Go to Admin Dashboard
+              </Link>
+            </div>
         ) : (
-            <MasonryGrid 
-              designs={designs} 
-              hasMore={true} 
-              loadMore={loadMore} 
-            />
+            <>
+                <MasonryGrid designs={designs} />
+
+                {/* ✅ Load More Button: Sirf tab dikhega jab aur designs honge */}
+                {hasMore && !loading && designs.length > 0 && (
+                    <div className="text-center mt-12">
+                        <button 
+                            onClick={handleLoadMore}
+                            className="px-8 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-full font-medium transition-colors"
+                        >
+                            Load More Designs
+                        </button>
+                    </div>
+                )}
+            </>
+        )}
+
+        {/* Loading Spinner */}
+        {loading && designs.length > 0 && (
+           <div className="py-10 text-center">
+             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+           </div>
         )}
       </section>
     </Layout>

@@ -1,4 +1,3 @@
-
 import { db, storage } from '../firebase';
 import { 
   collection, getDocs, addDoc, query, where, orderBy, limit as firestoreLimit, 
@@ -88,23 +87,22 @@ export const getAllCategories = async (): Promise<Category[]> => {
     querySnapshot.forEach((doc) => {
       categories.push({ ...doc.data(), id: doc.id } as Category & { id?: string });
     });
-    // If empty DB, return mocks, otherwise return DB data
-    if (categories.length === 0) return MOCK_CATEGORIES;
+    
+    // ✅ FIX: Agar database khali hai toh empty list return karo (Mock nahi)
     return categories;
   } catch (e) {
-    return MOCK_CATEGORIES;
+    console.error("Error fetching categories:", e);
+    return []; 
   }
 };
 
 export const saveCategory = async (category: Category): Promise<void> => {
   try {
-    // Check if exists by slug
     const q = query(collection(db, CATEGORIES_COLLECTION), where("slug", "==", category.slug));
     const querySnapshot = await getDocs(q);
     if (querySnapshot.empty) {
       await addDoc(collection(db, CATEGORIES_COLLECTION), category);
     } else {
-       // Update existing
        const docRef = querySnapshot.docs[0].ref;
        await updateDoc(docRef, category as any);
     }
@@ -174,8 +172,10 @@ export const getDesignBySlug = async (slug: string): Promise<NailDesign | undefi
     if (!querySnapshot.empty) {
       return querySnapshot.docs[0].data() as NailDesign;
     }
-    return MOCK_DESIGNS.find(d => d.slug === slug);
+    // ✅ FIX: Mock Data return nahi karna hai
+    return undefined;
   } catch (e) {
+    console.error("Error fetching design by slug:", e);
     return undefined;
   }
 };
@@ -206,16 +206,20 @@ export const getDesigns = async (options: FilterOptions = {}, limitCount: number
     querySnapshot.forEach((doc) => {
       designs.push(doc.data() as NailDesign);
     });
-    if (designs.length === 0 && !options.category && !options.searchQuery) {
-        return MOCK_DESIGNS.slice(0, limitCount);
+
+    // ✅ FIX: Agar designs nahi hain, toh khali array bhejo (MOCK_DESIGNS NAHI)
+    if (designs.length === 0) {
+        return [];
     }
+
     if (options.searchQuery) {
       const qText = options.searchQuery.toLowerCase();
       designs = designs.filter(d => d.title.toLowerCase().includes(qText) || d.category.includes(qText));
     }
     return designs;
   } catch (e) {
-    return MOCK_DESIGNS.slice(0, limitCount);
+    console.error("Error fetching designs:", e);
+    return [];
   }
 };
 
