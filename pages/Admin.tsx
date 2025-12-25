@@ -114,9 +114,10 @@ const Admin: React.FC = () => {
     setSiteConfig(s);
     setLoading(false);
     
-    // Generate Sitemaps on Load
-    if (activeTab === 'sitemaps') generateSitemaps(p, c);
-  };
+   // Always keep sitemaps updated in state
+ generateSitemaps(p, c);
+};
+
 
 
 const handleAuth = async () => {
@@ -188,12 +189,12 @@ const handleAuth = async () => {
       xml += `  <url>\n    <loc>${baseUrl}/</loc>\n    <lastmod>${date}</lastmod>\n    <priority>1.0</priority>\n  </url>\n`;
       // Categories
       allCats.forEach(c => {
-          xml += `  <url>\n    <loc>${baseUrl}/#/category/${c.slug}</loc>\n    <lastmod>${date}</lastmod>\n    <priority>0.8</priority>\n  </url>\n`;
+          xml += `  <url>\n    <loc>${baseUrl}/category/${c.slug}</loc>\n    <lastmod>${date}</lastmod>\n    <priority>0.8</priority>\n  </url>\n`;
       });
       // Posts
       allPosts.forEach(p => {
           if (p.status === 'published') {
-            xml += `  <url>\n    <loc>${baseUrl}/#/nail-designs/${p.slug}</loc>\n    <lastmod>${p.publishedAt.split('T')[0]}</lastmod>\n    <priority>0.6</priority>\n  </url>\n`;
+            xml += `  <url>\n    <loc>${baseUrl}/nail-designs/${p.slug}</loc>\n    <lastmod>${p.publishedAt.split('T')[0]}</lastmod>\n    <priority>0.6</priority>\n  </url>\n`;
           }
       });
       xml += `</urlset>`;
@@ -204,7 +205,7 @@ const handleAuth = async () => {
       allPosts.forEach(p => {
           if (p.status === 'published') {
             imgXml += `  <url>\n`;
-            imgXml += `    <loc>${baseUrl}/#/nail-designs/${p.slug}</loc>\n`;
+            imgXml += `    <loc>${baseUrl}/nail-designs/${p.slug}</loc>\n`;
             imgXml += `    <image:image>\n`;
             imgXml += `      <image:loc>${p.mainImage}</image:loc>\n`;
             imgXml += `      <image:title>${p.title.replace(/&/g, '&amp;')}</image:title>\n`;
@@ -245,7 +246,7 @@ const handleAuth = async () => {
     const seo: SEOConfig = {
        metaTitle: formData.seo?.metaTitle || `${formData.title}`,
        metaDescription: formData.seo?.metaDescription || formData.shortDescription || '',
-       canonicalUrl: formData.seo?.canonicalUrl || `https://naildesigns.art/#/nail-designs/${slug}`,
+       canonicalUrl: formData.seo?.canonicalUrl || `https://naildesigns.art/nail-designs/${slug}`,
        noIndex: formData.seo?.noIndex || false
     };
 

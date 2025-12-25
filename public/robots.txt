@@ -1,3 +1,9 @@
 User-agent: *
+Disallow: /admin
+Disallow: /admin/
+Disallow: /pages/admin
+Disallow: /pages/Admin
 Allow: /
+
 Sitemap: https://naildesigns.art/sitemap.xml
+Sitemap: https://naildesigns.art/image-sitemap.xml
